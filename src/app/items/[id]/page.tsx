@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getItemById } from "@/actions/items";
+import { prisma } from "@/lib/prisma";
 import { STATUS_LABELS, STATUS_COLORS } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import AdvanceStatusButton from "../advance-status-button";
+import SaleDialog from "./sale-dialog";
 
 const CONDITION_LABELS: Record<string, string> = {
   neu: "Neu",
@@ -26,8 +28,13 @@ export default async function ItemDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const item = await getItemById(id);
+  const [item, platforms] = await Promise.all([
+    getItemById(id),
+    prisma.platform.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+  ]);
   if (!item) notFound();
+
+  const canRecordSale = !item.sale && ["gelistet", "reserviert", "verkauft"].includes(item.status);
 
   const sale = item.sale;
   const margin =
@@ -58,6 +65,14 @@ export default async function ItemDetailPage({
             <span className={`text-sm font-medium px-3 py-1 rounded-full ${STATUS_COLORS[item.status]}`}>
               {STATUS_LABELS[item.status]}
             </span>
+            {canRecordSale && (
+              <SaleDialog
+                itemId={item.id}
+                purchasePrice={Number(item.purchasePrice)}
+                platforms={platforms}
+                defaultPlatformId={item.platformId}
+              />
+            )}
             <AdvanceStatusButton itemId={item.id} currentStatus={item.status} />
           </div>
         </div>

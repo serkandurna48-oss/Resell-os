@@ -39,7 +39,17 @@ export async function createSale(data: z.infer<typeof SaleSchema>) {
     data: { status: "verkauft" },
   });
 
+  await prisma.statusHistory.create({
+    data: {
+      itemId: validated.itemId,
+      fromStatus: item.status,
+      toStatus: "verkauft",
+      note: `Verkauft für ${validated.salePrice} €`,
+    },
+  });
+
   revalidatePath("/items");
   revalidatePath("/finances");
+  revalidatePath(`/items/${validated.itemId}`);
   return sale;
 }
