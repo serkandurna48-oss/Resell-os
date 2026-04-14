@@ -25,13 +25,16 @@ type FormValues = z.infer<typeof schema>;
 
 type Platform = { id: string; name: string };
 type StorageLocation = { id: string; code: string; description: string | null };
+type Category = { id: string; name: string };
 
 export default function NewItemDialog({
   platforms,
   storageLocations,
+  categories,
 }: {
   platforms: Platform[];
   storageLocations: StorageLocation[];
+  categories: Category[];
 }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -103,9 +106,15 @@ export default function NewItemDialog({
                   <label className={labelClass}>Kategorie *</label>
                   <input
                     {...register("category")}
+                    list="categories-new"
                     className={inputClass(!!errors.category)}
                     placeholder="z.B. Schuhe"
                   />
+                  <datalist id="categories-new">
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.name} />
+                    ))}
+                  </datalist>
                   {errors.category && <p className={errorClass}>{errors.category.message}</p>}
                 </div>
 

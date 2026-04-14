@@ -26,10 +26,11 @@ export default async function ItemsPage({
     ? (status as ItemStatus)
     : undefined;
 
-  const [items, platforms, storageLocations] = await Promise.all([
+  const [items, platforms, storageLocations, categories] = await Promise.all([
     getItems({ status: validStatus, search }),
     prisma.platform.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
     prisma.storageLocation.findMany({ where: { isActive: true }, orderBy: { code: "asc" } }),
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
 
   return (
@@ -40,7 +41,7 @@ export default async function ItemsPage({
           <h1 className="text-xl font-semibold">Items</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{items.length} Einträge</p>
         </div>
-        <NewItemDialog platforms={platforms} storageLocations={storageLocations} />
+        <NewItemDialog platforms={platforms} storageLocations={storageLocations} categories={categories} />
       </div>
 
       {/* Filter */}

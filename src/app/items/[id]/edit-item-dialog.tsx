@@ -27,6 +27,7 @@ type FormValues = z.infer<typeof schema>;
 
 type Platform = { id: string; name: string };
 type StorageLocation = { id: string; code: string; description: string | null };
+type Category = { id: string; name: string };
 
 type ItemData = {
   id: string;
@@ -46,10 +47,12 @@ export default function EditItemDialog({
   item,
   platforms,
   storageLocations,
+  categories,
 }: {
   item: ItemData;
   platforms: Platform[];
   storageLocations: StorageLocation[];
+  categories: Category[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -133,9 +136,15 @@ export default function EditItemDialog({
                   <label className={labelClass}>Kategorie *</label>
                   <input
                     {...register("category")}
+                    list="categories-edit"
                     className={inputClass(!!errors.category)}
                     placeholder="z.B. Schuhe"
                   />
+                  <datalist id="categories-edit">
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.name} />
+                    ))}
+                  </datalist>
                   {errors.category && <p className={errorClass}>{errors.category.message}</p>}
                 </div>
 

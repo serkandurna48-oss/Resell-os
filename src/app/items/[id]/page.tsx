@@ -30,10 +30,11 @@ export default async function ItemDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [item, platforms, storageLocations] = await Promise.all([
+  const [item, platforms, storageLocations, categories] = await Promise.all([
     getItemById(id),
     prisma.platform.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
     prisma.storageLocation.findMany({ where: { isActive: true }, orderBy: { code: "asc" } }),
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
   if (!item) notFound();
 
@@ -72,6 +73,7 @@ export default async function ItemDetailPage({
               item={item}
               platforms={platforms}
               storageLocations={storageLocations}
+              categories={categories}
             />
             {canRecordSale && (
               <SaleDialog

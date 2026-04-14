@@ -6,6 +6,8 @@ import {
   createStorageLocation,
   deleteStorageLocation,
   toggleStorageLocation,
+  createCategory,
+  deleteCategory,
 } from "@/actions/settings";
 
 const TYPE_OPTIONS = [
@@ -17,9 +19,10 @@ const TYPE_OPTIONS = [
 ];
 
 export default async function SettingsPage() {
-  const [platforms, storageLocations] = await Promise.all([
+  const [platforms, storageLocations, categories] = await Promise.all([
     prisma.platform.findMany({ orderBy: { name: "asc" } }),
     prisma.storageLocation.findMany({ orderBy: { code: "asc" } }),
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
 
   return (
@@ -240,6 +243,59 @@ export default async function SettingsPage() {
           <button type="submit" className={submitClass}>
             + Lagerort hinzufügen
           </button>
+        </form>
+      </section>
+
+      {/* ── Kategorien ───────────────────────────────────────────────── */}
+      <section className="space-y-4">
+        <h2 className="text-base font-semibold">Kategorien</h2>
+
+        <div className="rounded-xl border border-border bg-background overflow-hidden">
+          {categories.length === 0 ? (
+            <p className="px-5 py-4 text-sm text-muted-foreground">Keine Kategorien.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-border">
+                {categories.map((c) => (
+                  <tr key={c.id}>
+                    <td className="px-4 py-2.5 font-medium">{c.name}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      <form
+                        action={async () => {
+                          "use server";
+                          await deleteCategory(c.id);
+                        }}
+                      >
+                        <button
+                          type="submit"
+                          className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          Löschen
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <form action={createCategory} className="rounded-xl border border-dashed border-border p-4 space-y-3">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Neue Kategorie
+          </p>
+          <div className="flex gap-3">
+            <input
+              name="name"
+              required
+              className={inputClass}
+              placeholder="z.B. Schuhe"
+            />
+            <button type="submit" className={submitClass}>
+              + Hinzufügen
+            </button>
+          </div>
         </form>
       </section>
     </main>
