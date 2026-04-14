@@ -107,6 +107,25 @@ export async function getItems(filters?: {
   });
 }
 
+export async function updateItem(
+  id: string,
+  formData: z.infer<typeof ItemFormSchema> & { notes?: string }
+) {
+  const validated = ItemFormSchema.parse(formData);
+
+  const updated = await prisma.item.update({
+    where: { id },
+    data: {
+      ...validated,
+      notes: formData.notes || null,
+    },
+  });
+
+  revalidatePath("/items");
+  revalidatePath(`/items/${id}`);
+  return updated;
+}
+
 export async function getItemById(id: string) {
   return prisma.item.findUnique({
     where: { id },

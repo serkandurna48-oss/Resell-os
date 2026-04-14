@@ -6,6 +6,7 @@ import { STATUS_LABELS, STATUS_COLORS } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import AdvanceStatusButton from "../advance-status-button";
 import SaleDialog from "./sale-dialog";
+import EditItemDialog from "./edit-item-dialog";
 
 const CONDITION_LABELS: Record<string, string> = {
   neu: "Neu",
@@ -28,9 +29,10 @@ export default async function ItemDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [item, platforms] = await Promise.all([
+  const [item, platforms, storageLocations] = await Promise.all([
     getItemById(id),
     prisma.platform.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+    prisma.storageLocation.findMany({ where: { isActive: true }, orderBy: { code: "asc" } }),
   ]);
   if (!item) notFound();
 
@@ -61,10 +63,15 @@ export default async function ItemDetailPage({
               </p>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <span className={`text-sm font-medium px-3 py-1 rounded-full ${STATUS_COLORS[item.status]}`}>
               {STATUS_LABELS[item.status]}
             </span>
+            <EditItemDialog
+              item={item}
+              platforms={platforms}
+              storageLocations={storageLocations}
+            />
             {canRecordSale && (
               <SaleDialog
                 itemId={item.id}
