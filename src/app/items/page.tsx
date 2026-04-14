@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ItemStatus } from "@prisma/client";
 import { STATUS_LABELS, STATUS_COLORS } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
+import Link from "next/link";
 import ItemsFilters from "./items-filters";
 import NewItemDialog from "./new-item-dialog";
 import AdvanceStatusButton from "./advance-status-button";
@@ -74,12 +75,14 @@ export default async function ItemsPage({
               {items.map((item) => (
                 <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3 max-w-[220px]">
-                    <div className="font-medium truncate">{item.title}</div>
-                    {(item.brand || item.size) && (
-                      <div className="text-xs text-muted-foreground truncate">
-                        {[item.brand, item.size].filter(Boolean).join(" · ")}
-                      </div>
-                    )}
+                    <Link href={`/items/${item.id}`} className="hover:underline underline-offset-2">
+                      <div className="font-medium truncate">{item.title}</div>
+                      {(item.brand || item.size) && (
+                        <div className="text-xs text-muted-foreground truncate">
+                          {[item.brand, item.size].filter(Boolean).join(" · ")}
+                        </div>
+                      )}
+                    </Link>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{item.category}</td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
