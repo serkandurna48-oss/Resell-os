@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import AdvanceStatusButton from "../advance-status-button";
 import SaleDialog from "./sale-dialog";
 import EditItemDialog from "./edit-item-dialog";
+import ShipmentForm from "./shipment-form";
 
 const CONDITION_LABELS: Record<string, string> = {
   neu: "Neu",
@@ -166,31 +167,11 @@ export default async function ItemDetailPage({
               </div>
             </div>
 
-            {sale.shipment && (
-              <div className="border-t border-border px-5 py-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
-                <span>
-                  Carrier: <span className="text-foreground">{sale.shipment.carrier ?? "–"}</span>
-                </span>
-                {sale.shipment.trackingNumber && (
-                  <span>
-                    Tracking:{" "}
-                    <span className="font-mono text-foreground">
-                      {sale.shipment.trackingNumber}
-                    </span>
-                  </span>
-                )}
-                {sale.shipment.shippedAt && (
-                  <span>
-                    Versendet: <span className="text-foreground">{formatDate(sale.shipment.shippedAt)}</span>
-                  </span>
-                )}
-                {sale.shipment.deliveredAt && (
-                  <span>
-                    Zugestellt: <span className="text-foreground">{formatDate(sale.shipment.deliveredAt)}</span>
-                  </span>
-                )}
-              </div>
-            )}
+            <ShipmentForm
+              saleId={sale.id}
+              itemId={item.id}
+              shipment={sale.shipment}
+            />
           </div>
         </div>
       )}
