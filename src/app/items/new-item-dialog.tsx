@@ -49,7 +49,7 @@ export default function NewItemDialog({
     defaultValues: { condition: "gut" },
   });
 
-  function onSubmit(values: FormValues) {
+  function onSubmit(values: FormValues, keepOpen = false) {
     startTransition(async () => {
       await createItem({
         title: values.title,
@@ -62,8 +62,27 @@ export default function NewItemDialog({
         storageLocationId: values.storageLocationId || undefined,
         platformId: values.platformId || undefined,
       });
-      reset();
-      setOpen(false);
+      if (keepOpen) {
+        // Behalte Kategorie/Plattform/Lager — reset nur item-spezifische Felder
+        reset({
+          title: "",
+          brand: "",
+          size: "",
+          purchasePrice: "",
+          targetPrice: "",
+          condition: values.condition,
+          category: values.category,
+          storageLocationId: values.storageLocationId,
+          platformId: values.platformId,
+        });
+        // Fokus zurück auf Titel-Feld
+        setTimeout(() => {
+          document.getElementById("new-item-title")?.focus();
+        }, 50);
+      } else {
+        reset();
+        setOpen(false);
+      }
     });
   }
 
@@ -94,9 +113,11 @@ export default function NewItemDialog({
                 <div className="col-span-2">
                   <label className={labelClass}>Titel *</label>
                   <input
+                    id="new-item-title"
                     {...register("title")}
                     className={inputClass(!!errors.title)}
                     placeholder="z.B. Nike Air Max 90"
+                    autoFocus
                   />
                   {errors.title && <p className={errorClass}>{errors.title.message}</p>}
                 </div>
@@ -209,8 +230,16 @@ export default function NewItemDialog({
                 >
                   Abbrechen
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isPending}
+                  onClick={handleSubmit((v) => onSubmit(v, true))}
+                >
+                  {isPending ? "…" : "+ Weiteres"}
+                </Button>
                 <Button type="submit" disabled={isPending}>
-                  {isPending ? "Speichern…" : "Item anlegen"}
+                  {isPending ? "Speichern…" : "Anlegen"}
                 </Button>
               </div>
             </form>

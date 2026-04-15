@@ -8,6 +8,7 @@ import AdvanceStatusButton from "../advance-status-button";
 import SaleDialog from "./sale-dialog";
 import EditItemDialog from "./edit-item-dialog";
 import ShipmentForm from "./shipment-form";
+import DeleteItemButton from "../delete-item-button";
 
 const CONDITION_LABELS: Record<string, string> = {
   neu: "Neu",
@@ -30,12 +31,16 @@ export default async function ItemDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [item, platforms, storageLocations, categories] = await Promise.all([
+  const [item, rawPlatforms, storageLocations, categories] = await Promise.all([
     getItemById(id),
     prisma.platform.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
     prisma.storageLocation.findMany({ where: { isActive: true }, orderBy: { code: "asc" } }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
+  const platforms = rawPlatforms.map((p) => ({
+    ...p,
+    defaultFeePct: p.defaultFeePct !== null ? Number(p.defaultFeePct) : null,
+  }));
   if (!item) notFound();
 
   const canRecordSale = !item.sale && ["gelistet", "reserviert", "verkauft"].includes(item.status);
@@ -70,7 +75,19 @@ export default async function ItemDetailPage({
               {STATUS_LABELS[item.status]}
             </span>
             <EditItemDialog
-              item={item}
+              item={{
+                id: item.id,
+                title: item.title,
+                category: item.category,
+                brand: item.brand,
+                size: item.size,
+                condition: item.condition,
+                purchasePrice: Number(item.purchasePrice),
+                targetPrice: item.targetPrice !== null ? Number(item.targetPrice) : null,
+                storageLocationId: item.storageLocationId,
+                platformId: item.platformId,
+                notes: item.notes,
+              }}
               platforms={platforms}
               storageLocations={storageLocations}
               categories={categories}
@@ -84,6 +101,7 @@ export default async function ItemDetailPage({
               />
             )}
             <AdvanceStatusButton itemId={item.id} currentStatus={item.status} />
+            <DeleteItemButton itemId={item.id} redirectAfter />
           </div>
         </div>
       </div>

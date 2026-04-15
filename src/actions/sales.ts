@@ -50,6 +50,8 @@ export async function createSale(data: z.infer<typeof SaleSchema>) {
 
   revalidatePath("/items");
   revalidatePath("/finances");
+  revalidatePath("/workflow");
+  revalidatePath("/");
   revalidatePath(`/items/${validated.itemId}`);
-  return sale;
+  return { id: sale.id };
 }

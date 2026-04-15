@@ -41,7 +41,7 @@ export const STATUS_FLOW: Partial<Record<ItemStatus, ItemStatus>> = {
   zu_reinigen:      "ready_fuer_fotos",
   ready_fuer_fotos: "fotografiert",
   fotografiert:     "gelistet",
-  gelistet:         "verkauft",
+  // gelistet → verkauft intentionally missing: use "Verkauf erfassen" to record sale + profit
   verkauft:         "verpackt",
   verpackt:         "versendet",
   versendet:        "abgeschlossen",

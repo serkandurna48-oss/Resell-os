@@ -39,7 +39,9 @@ export async function createItem(formData: z.infer<typeof ItemFormSchema>) {
   });
 
   revalidatePath("/items");
-  return item;
+  revalidatePath("/workflow");
+  revalidatePath("/");
+  return { id: item.id };
 }
 
 export async function updateStatus(
@@ -49,7 +51,7 @@ export async function updateStatus(
 ) {
   const item = await prisma.item.findUniqueOrThrow({ where: { id: itemId } });
 
-  const updated = await prisma.item.update({
+  await prisma.item.update({
     where: { id: itemId },
     data: { status: newStatus },
   });
@@ -66,13 +68,13 @@ export async function updateStatus(
   revalidatePath("/items");
   revalidatePath(`/items/${itemId}`);
   revalidatePath("/workflow");
-  return updated;
+  revalidatePath("/");
 }
 
 export async function advanceStatus(itemId: string) {
   const item = await prisma.item.findUniqueOrThrow({ where: { id: itemId } });
   const next = getNextStatus(item.status);
-  if (!next) return item;
+  if (!next) return;
   return updateStatus(itemId, next);
 }
 
@@ -123,7 +125,7 @@ export async function updateItem(
 
   revalidatePath("/items");
   revalidatePath(`/items/${id}`);
-  return updated;
+  revalidatePath("/workflow");
 }
 
 export async function getItemById(id: string) {
@@ -136,4 +138,27 @@ export async function getItemById(id: string) {
       statusHistory: { orderBy: { changedAt: "asc" } },
     },
   });
+}
+
+export async function deleteItem(id: string) {
+  const item = await prisma.item.findUnique({
+    where: { id },
+    include: { sale: { include: { shipment: true } } },
+  });
+  if (!item) return;
+
+  await prisma.statusHistory.deleteMany({ where: { itemId: id } });
+
+  if (item.sale) {
+    if (item.sale.shipment) {
+      await prisma.shipment.delete({ where: { id: item.sale.shipment.id } });
+    }
+    await prisma.sale.delete({ where: { id: item.sale.id } });
+  }
+
+  await prisma.item.delete({ where: { id } });
+
+  revalidatePath("/items");
+  revalidatePath("/workflow");
+  revalidatePath("/");
 }

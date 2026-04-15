@@ -4,6 +4,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { ItemStatus } from "@prisma/client";
 import { formatCurrency } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export type KanbanItem = {
   id: string;
@@ -25,8 +26,16 @@ export default function KanbanCard({
   item: KanbanItem;
   isOverlay?: boolean;
 }) {
+  const router = useRouter();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: item.id });
+
+  // Navigate on click only if it wasn't a drag (pointer didn't move much)
+  function handleClick(e: React.MouseEvent) {
+    if (isDragging) return;
+    e.stopPropagation();
+    router.push(`/items/${item.id}`);
+  }
 
   return (
     <div
@@ -34,6 +43,7 @@ export default function KanbanCard({
       style={{ transform: CSS.Translate.toString(transform) }}
       {...listeners}
       {...attributes}
+      onClick={handleClick}
       className={[
         "rounded-lg border border-border bg-background p-3 space-y-1.5",
         "cursor-grab active:cursor-grabbing select-none touch-none",

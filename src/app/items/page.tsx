@@ -4,10 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { ItemStatus } from "@prisma/client";
 import { STATUS_LABELS, STATUS_COLORS } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
-import Link from "next/link";
 import ItemsFilters from "./items-filters";
 import NewItemDialog from "./new-item-dialog";
 import AdvanceStatusButton from "./advance-status-button";
+import DeleteItemButton from "./delete-item-button";
+import ItemRow from "./item-row";
+import ActionsCell from "./actions-cell";
 
 const CONDITION_LABELS: Record<string, string> = {
   neu: "Neu",
@@ -27,12 +29,16 @@ export default async function ItemsPage({
     ? (status as ItemStatus)
     : undefined;
 
-  const [items, platforms, storageLocations, categories] = await Promise.all([
+  const [items, rawPlatforms, storageLocations, categories] = await Promise.all([
     getItems({ status: validStatus, search }),
     prisma.platform.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
     prisma.storageLocation.findMany({ where: { isActive: true }, orderBy: { code: "asc" } }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
+  const platforms = rawPlatforms.map((p) => ({
+    ...p,
+    defaultFeePct: p.defaultFeePct !== null ? Number(p.defaultFeePct) : null,
+  }));
 
   return (
     <main className="px-8 py-8 space-y-6">
@@ -73,16 +79,14 @@ export default async function ItemsPage({
             </thead>
             <tbody className="divide-y divide-border">
               {items.map((item) => (
-                <tr key={item.id} className="hover:bg-muted/30 transition-colors">
+                <ItemRow key={item.id} itemId={item.id}>
                   <td className="px-4 py-3 max-w-[220px]">
-                    <Link href={`/items/${item.id}`} className="hover:underline underline-offset-2">
-                      <div className="font-medium truncate">{item.title}</div>
-                      {(item.brand || item.size) && (
-                        <div className="text-xs text-muted-foreground truncate">
-                          {[item.brand, item.size].filter(Boolean).join(" · ")}
-                        </div>
-                      )}
-                    </Link>
+                    <div className="font-medium truncate">{item.title}</div>
+                    {(item.brand || item.size) && (
+                      <div className="text-xs text-muted-foreground truncate">
+                        {[item.brand, item.size].filter(Boolean).join(" · ")}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{item.category}</td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
@@ -105,10 +109,13 @@ export default async function ItemsPage({
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                     {item.storageLocation?.code ?? "–"}
                   </td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <AdvanceStatusButton itemId={item.id} currentStatus={item.status} />
-                  </td>
-                </tr>
+                  <ActionsCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <AdvanceStatusButton itemId={item.id} currentStatus={item.status} />
+                      <DeleteItemButton itemId={item.id} />
+                    </div>
+                  </ActionsCell>
+                </ItemRow>
               ))}
             </tbody>
           </table>
